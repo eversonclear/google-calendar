@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  get 'google_events', to: 'google_events#index'
+
   post '/microsoft_auth', to: 'microsoft_authentication#authenticate'
   post '/refresh_token', to: 'microsoft_authentication#refresh_token'
   get '/current_user', to: 'users#show_current_user'

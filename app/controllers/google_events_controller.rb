@@ -5,7 +5,7 @@ class GoogleEventsController < ApplicationController
   # GET /google_events.json
   def index
     events = service_google_calendar.get_all_events
-    render json: { calendars: events}
+    render json: { calendars: current_user.calendars.as_json(include: :events) }
   end
 
   # GET /google_events/1
@@ -54,6 +54,6 @@ class GoogleEventsController < ApplicationController
 
     def service_google_calendar
       auth = AccessTokenService.new current_user.google_token
-      @service_google_calendar ||= GoogleCalendarService.new(auth)
+      @service_google_calendar ||= GoogleCalendarService.new(auth, current_user)
     end
 end
