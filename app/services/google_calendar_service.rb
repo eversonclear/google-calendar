@@ -27,14 +27,25 @@ class GoogleCalendarService
 
       events = list_calendar_events(calendar_item.id)
       events.items.each do |event_item|
-        @event = Event.where(calendar_id: @calendar.id, remote_id: event_item.id).first     
-        
-      
+        @event = Event.where(calendar_id: @calendar.id, remote_id: event_item.id).first             
         if @event.present?
           @event.update(event_params(event_item))
         else
-          @calendar.events.create!(event_params(event_item))
+          @event = @calendar.events.create!(event_params(event_item))
         end
+
+        if event_item.attendees.present?
+          event_item.attendees.each do |event_attendee|
+            @event_attendee = EventAttendee.where(event_id: @event.id, email: event_attendee.email).first  
+            
+            if @event_attendee.present?
+              @event_attendee.update(event_attendee_params(event_attendee))
+            else
+              @event.event_attendees.create!(event_attendee_params(event_attendee))
+            end
+          end
+        end
+
       end
     end
   end
@@ -55,7 +66,7 @@ class GoogleCalendarService
       color_id: calendar.color_id,
       conference_properties: calendar.conference_properties.as_json,
       default_reminders: calendar.default_reminders,
-      etag: calendar.etag,
+      etag: calendar.etag.gsub('"', ""),
       foreground_color: calendar.foreground_color,
       remote_id: calendar.id,
       kind: calendar.kind,
@@ -88,6 +99,16 @@ class GoogleCalendarService
       reminders: event.reminders.as_json || { },
       status: event.status,
       summary: event.summary,
+    }
+  end
+
+  def event_attendee_params(event_attendee)
+    {
+      event: @event,
+      email: event_attendee.email,
+      organizer: event_attendee.organizer,
+      response_status: event_attendee.response_status,
+      self: event_attendee.self,
     }
   end
 

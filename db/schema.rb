@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_03_13_144725) do
+ActiveRecord::Schema[7.0].define(version: 2023_03_14_140034) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -31,6 +31,28 @@ ActiveRecord::Schema[7.0].define(version: 2023_03_13_144725) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_calendars_on_user_id"
+  end
+
+  create_table "event_attendees", force: :cascade do |t|
+    t.string "email"
+    t.boolean "organizer"
+    t.string "response_status"
+    t.boolean "self"
+    t.bigint "event_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_event_attendees_on_event_id"
+  end
+
+  create_table "event_attends", force: :cascade do |t|
+    t.string "email"
+    t.boolean "organizer"
+    t.string "response_status"
+    t.boolean "self"
+    t.bigint "event_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_event_attends_on_event_id"
   end
 
   create_table "events", force: :cascade do |t|
@@ -80,6 +102,8 @@ ActiveRecord::Schema[7.0].define(version: 2023_03_13_144725) do
   end
 
   add_foreign_key "calendars", "users"
+  add_foreign_key "event_attendees", "events"
+  add_foreign_key "event_attends", "events"
   add_foreign_key "events", "calendars"
   add_foreign_key "events", "users"
 end

@@ -5,7 +5,7 @@ class GoogleEventsController < ApplicationController
   # GET /google_events.json
   def index
     events = service_google_calendar.get_all_events
-    render json: { calendars: current_user.calendars.as_json(include: :events) }
+    render json: { calendars: current_user.calendars.as_json(include: { events: { include: :event_attendees } }) }
   end
 
   # GET /google_events/1

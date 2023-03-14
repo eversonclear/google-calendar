@@ -3,6 +3,7 @@ class Event < ApplicationRecord
 
   serialize :reminders, JSON
 
+  has_many :event_attendees
   belongs_to :user
   belongs_to :calendar
 end
