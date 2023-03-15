@@ -9,6 +9,12 @@ class CreateEvents < ActiveRecord::Migration[7.0]
       t.string :starts_at_timezone
       t.datetime :finishes_at
       t.string :finishes_at_timezone
+      t.datetime :original_starts_at
+      t.string :original_starts_at_time_zone
+      t.string :recurring_event_id
+      t.integer :sequence
+      t.string :location
+      t.string :description
       t.string :creator_email
       t.boolean :self_created
       t.string :etag
@@ -22,6 +28,7 @@ class CreateEvents < ActiveRecord::Migration[7.0]
       t.text :reminders
       t.string :status
       t.string :summary
+      t.string :transparency
 
       t.timestamps
     end

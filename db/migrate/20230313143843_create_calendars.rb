@@ -5,6 +5,7 @@ class CreateCalendars < ActiveRecord::Migration[7.0]
       t.string :access_role
       t.string :background_color
       t.string :color_id
+      t.string :description
       t.text :default_reminders
       t.text :conference_properties
       t.string :etag
@@ -13,6 +14,10 @@ class CreateCalendars < ActiveRecord::Migration[7.0]
       t.string :kind
       t.boolean :selected
       t.string :summary
+      t.string :summary_override
+      t.boolean :primary
+      t.boolean :deleted
+      t.boolean :hidden
       t.string :time_zone
 
       t.timestamps

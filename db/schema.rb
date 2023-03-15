@@ -19,6 +19,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_03_14_140034) do
     t.string "access_role"
     t.string "background_color"
     t.string "color_id"
+    t.string "description"
     t.text "default_reminders"
     t.text "conference_properties"
     t.string "etag"
@@ -27,6 +28,10 @@ ActiveRecord::Schema[7.0].define(version: 2023_03_14_140034) do
     t.string "kind"
     t.boolean "selected"
     t.string "summary"
+    t.string "summary_override"
+    t.boolean "primary"
+    t.boolean "deleted"
+    t.boolean "hidden"
     t.string "time_zone"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -44,17 +49,6 @@ ActiveRecord::Schema[7.0].define(version: 2023_03_14_140034) do
     t.index ["event_id"], name: "index_event_attendees_on_event_id"
   end
 
-  create_table "event_attends", force: :cascade do |t|
-    t.string "email"
-    t.boolean "organizer"
-    t.string "response_status"
-    t.boolean "self"
-    t.bigint "event_id", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["event_id"], name: "index_event_attends_on_event_id"
-  end
-
   create_table "events", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "calendar_id", null: false
@@ -64,6 +58,12 @@ ActiveRecord::Schema[7.0].define(version: 2023_03_14_140034) do
     t.string "starts_at_timezone"
     t.datetime "finishes_at"
     t.string "finishes_at_timezone"
+    t.datetime "original_starts_at"
+    t.string "original_starts_at_time_zone"
+    t.string "recurring_event_id"
+    t.integer "sequence"
+    t.string "location"
+    t.string "description"
     t.string "creator_email"
     t.boolean "self_created"
     t.string "etag"
@@ -77,6 +77,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_03_14_140034) do
     t.text "reminders"
     t.string "status"
     t.string "summary"
+    t.string "transparency"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["calendar_id"], name: "index_events_on_calendar_id"
@@ -103,7 +104,6 @@ ActiveRecord::Schema[7.0].define(version: 2023_03_14_140034) do
 
   add_foreign_key "calendars", "users"
   add_foreign_key "event_attendees", "events"
-  add_foreign_key "event_attends", "events"
   add_foreign_key "events", "calendars"
   add_foreign_key "events", "users"
 end

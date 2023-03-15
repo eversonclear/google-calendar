@@ -72,7 +72,13 @@ class GoogleCalendarService
       kind: calendar.kind,
       selected: calendar.selected,
       summary: calendar.summary,
-      time_zone: calendar.time_zone
+      time_zone: calendar.time_zone,
+      deleted: calendar.deleted,
+      deleted: calendar.description,
+      summary_override: calendar.summary_override,
+      primary: calendar.primary,
+      hidden: calendar.hidden
+
     }
   end
 
@@ -80,6 +86,12 @@ class GoogleCalendarService
     {
       calendar: @calendar,
       user: @current_user,
+      original_starts_at_time_zone: (event.original_start_time.present?) ? (event.original_start_time.time_zone || event.original_start_time.time_zone) : nil,
+      original_starts_at: (event.original_start_time.present?) ? (event.original_start_time.date_time || event.original_start_time.date) : nil,
+      recurring_event_id: event.recurring_event_id,
+      sequence: event.sequence,
+      location: event.location || '',
+      description: event.description || '',
       remote_created_at: event.created,
       remote_updated_at: event.updated,
       starts_at: event.start.date_time || event.start.date,
@@ -99,6 +111,7 @@ class GoogleCalendarService
       reminders: event.reminders.as_json || { },
       status: event.status,
       summary: event.summary,
+      transparency: event.transparency
     }
   end
 
