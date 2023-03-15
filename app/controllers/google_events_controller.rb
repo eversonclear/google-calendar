@@ -4,7 +4,7 @@ class GoogleEventsController < ApplicationController
   # GET /google_events
   # GET /google_events.json
   def index
-    events = service_google_calendar.get_all_events
+    UpdateCalendarsEventsJob.perform_sync(current_user.id)
     render json: { calendars: current_user.calendars.as_json(include: { events: { include: :event_attendees } }) }
   end
 
@@ -50,10 +50,5 @@ class GoogleEventsController < ApplicationController
     # Only allow a list of trusted parameters through.
     def google_event_params
       params.require(:google_event).permit(:organizer, :starts_at, :finishes_at, :title, :status, :description, :participants)
-    end
-
-    def service_google_calendar
-      auth = AccessTokenService.new current_user.google_token
-      @service_google_calendar ||= GoogleCalendarService.new(auth, current_user)
     end
 end
