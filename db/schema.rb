@@ -58,9 +58,6 @@ ActiveRecord::Schema[7.0].define(version: 2023_03_14_140034) do
     t.string "starts_at_timezone"
     t.datetime "finishes_at"
     t.string "finishes_at_timezone"
-    t.datetime "original_starts_at"
-    t.string "original_starts_at_time_zone"
-    t.string "recurring_event_id"
     t.integer "sequence"
     t.string "location"
     t.string "description"
@@ -78,6 +75,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_03_14_140034) do
     t.string "status"
     t.string "summary"
     t.string "transparency"
+    t.string "recurrences"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["calendar_id"], name: "index_events_on_calendar_id"

@@ -74,8 +74,8 @@ class GoogleCalendarService
       summary: calendar.summary,
       time_zone: calendar.time_zone,
       deleted: calendar.deleted,
-      deleted: calendar.description,
-      summary_override: calendar.summary_override,
+      description: calendar.description || '',
+      summary_override: calendar.summary_override || '',
       primary: calendar.primary,
       hidden: calendar.hidden
 
@@ -86,9 +86,6 @@ class GoogleCalendarService
     {
       calendar: @calendar,
       user: @current_user,
-      original_starts_at_time_zone: (event.original_start_time.present?) ? (event.original_start_time.time_zone || event.original_start_time.time_zone) : nil,
-      original_starts_at: (event.original_start_time.present?) ? (event.original_start_time.date_time || event.original_start_time.date) : nil,
-      recurring_event_id: event.recurring_event_id,
       sequence: event.sequence,
       location: event.location || '',
       description: event.description || '',
@@ -100,7 +97,7 @@ class GoogleCalendarService
       finishes_at_timezone: event.end.time_zone || '',
       creator_email: event.creator.email,
       self_created: event.creator.self,
-      etag: event.etag,
+      etag: event.etag.gsub('"', ""),
       event_type: event.event_type,
       html_link: event.html_link,
       i_cal_uid: event.i_cal_uid,
@@ -111,7 +108,8 @@ class GoogleCalendarService
       reminders: event.reminders.as_json || { },
       status: event.status,
       summary: event.summary,
-      transparency: event.transparency
+      transparency: event.transparency || "",
+      recurrences: event.recurrence
     }
   end
 
@@ -127,8 +125,6 @@ class GoogleCalendarService
 
   def list_calendar_events(calendar_id)
     @google_service.list_events(calendar_id, 
-                                single_events: true,
-                                order_by: 'startTime',
                                 time_min: Time.now.iso8601)                         
   end
 end
