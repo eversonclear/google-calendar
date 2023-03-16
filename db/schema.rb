@@ -93,6 +93,8 @@ ActiveRecord::Schema[7.0].define(version: 2023_03_14_140034) do
     t.string "first_name"
     t.string "last_name"
     t.string "google_token"
+    t.string "google_refresh_token"
+    t.datetime "google_expire_token"
     t.string "azure_token"
     t.string "azure_refresh_token"
     t.datetime "azure_expire_token"

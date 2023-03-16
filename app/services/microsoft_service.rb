@@ -31,7 +31,7 @@ class MicrosoftService
     {
       grant_type: 'refresh_token',
       refresh_token: azure_refresh_token,
-      client_id: '7a59a59c-a48a-4ddc-9542-c2ce3c15cb2b',
+      client_id: ENV['MICROSOFT_CLIENT_ID'],
       scope: [
         'openid',
         'offline_access',

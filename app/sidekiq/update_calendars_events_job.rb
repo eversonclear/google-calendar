@@ -3,13 +3,22 @@ class UpdateCalendarsEventsJob
 
   def perform(current_user_id)
     @current_user = User.find(current_user_id)
+    refresh_token_if_invalid
+    set_google_calendar_service
     update_user_calendars
   end
 
-  def update_user_calendars
-    @google_service = google_service
+  def refresh_token_if_invalid
+    @google_service = GoogleService.new
 
-    calendars = @google_service.list_calendar_lists
+    if !@google_service.access_token_is_valid?(@current_user.google_expire_token)
+      data_token = @google_service.refresh_token(@current_user.google_refresh_token)
+      @current_user.update(google_token: data_token["access_token"], google_expire_token: Time.now + data_token['expires_in'])
+    end
+  end
+
+  def update_user_calendars
+    calendars = @google_calendar_service.list_calendar_lists
     
     calendars.items.each do |calendar_item|
       @calendar = Calendar.where(remote_id: calendar_item.id).first     
@@ -20,7 +29,7 @@ class UpdateCalendarsEventsJob
         @calendar = Calendar.create!(calendar_params(calendar_item))
       end
 
-      events = @google_service.list_events(calendar_item.id, 
+      events = @google_calendar_service.list_events(calendar_item.id, 
                                           time_min: Time.now.iso8601)
 
       events.items.each do |event_item|
@@ -48,12 +57,11 @@ class UpdateCalendarsEventsJob
 
   private 
 
-  def google_service
+  def set_google_calendar_service
     token = AccessTokenService.new @current_user.google_token
 
-    google_service = Google::Apis::CalendarV3::CalendarService.new
-    google_service.authorization = token
-    google_service
+    @google_calendar_service = Google::Apis::CalendarV3::CalendarService.new
+    @google_calendar_service.authorization = token
   end
 
   def calendar_params(calendar)
