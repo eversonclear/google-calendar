@@ -7,12 +7,13 @@ class GoogleService
     @client_secret = ENV["GOOGLE_CLIENT_SECRET_ID"]
   end
 
-  def get_user_data(id_token)
-    user_data = Net::HTTP.get(URI("https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=#{id_token}"))
+  def get_user_data(access_token)
+    user_data = Net::HTTP.get(URI("https://www.googleapis.com/oauth2/v3/userinfo?access_token=#{access_token}"))
     JSON.parse(user_data)
   end
 
-  def generate_refresh_token(authorization_code)
+  def generate_tokens(authorization_code, is_web)
+    redirect_uri = is_web ? ENV['GOOGLE_REDIRECT_URI_WEB'] : ''
     url = URI('https://accounts.google.com/o/oauth2/token')
 
     params = {
@@ -21,7 +22,7 @@ class GoogleService
       client_secret: @client_secret,
       grant_type: "authorization_code",
       access_type: "offline",
-      redirect_uri: 'http://localhost:3001'
+      redirect_uri: redirect_uri
     }
 
     res = Net::HTTP.post_form(url, params)

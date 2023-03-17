@@ -3,15 +3,13 @@ require 'net/http'
 class GoogleAuthenticationController < ApplicationController
   before_action :set_google_service
   def authenticate
-    user_data = @google_service.get_user_data(params[:id_token])
-    render json: { error: 'Invalid token' } and return unless user_data['email'] && user_data['email_verified']
+    tokens = @google_service.generate_tokens(params[:code], params[:web].present?)
+    render json: { error: 'Invalid Auth Code' }, status: :bad_request and return unless tokens['refresh_token'] && tokens['access_token']
 
+    user_data = @google_service.get_user_data(tokens['access_token'])
     password = Devise.friendly_token[0,20]
-    @current_user = User.where(email: user_data['email']).first_or_create(password: password, first_name: user_data['given_name'], last_name: response['family_name'])
-    
-    data_token = @google_service.generate_refresh_token(params[:code])
-    @current_user.update(google_token: data_token["access_token"], google_refresh_token: data_token["refresh_token"], google_expire_token: Time.now + data_token['expires_in'])
-    
+    @current_user = User.where(email: user_data['email']).first_or_create(password: password, first_name: user_data['given_name'], last_name: user_data['family_name'])
+    @current_user.update(google_token: tokens["access_token"], google_refresh_token: tokens["refresh_token"], google_expire_token: Time.now + tokens['expires_in'])
     render 'users/show'
   end
 
