@@ -83,8 +83,9 @@ class UpdateUserCalendarsGoogleJob
       description: calendar.description || '',
       summary_override: calendar.summary_override || '',
       primary: calendar.primary,
-      hidden: calendar.hidden
-
+      hidden: calendar.hidden,
+      location: calendar.location,
+      notification_settings: calendar.notification_settings.as_json
     }
   end
 
@@ -102,20 +103,41 @@ class UpdateUserCalendarsGoogleJob
       finishes_at: event.end.date_time || event.end.date,
       finishes_at_timezone: event.end.time_zone || '',
       creator_email: event.creator.email,
+      creator_id: event.creator.id,
+      creator_display_name: event.creator.display_name,
       self_created: event.creator.self,
       etag: event.etag.gsub('"', ""),
       event_type: event.event_type,
-      html_link: event.html_link,
+      web_link: event.html_link,
       i_cal_uid: event.i_cal_uid,
       remote_id: event.id,
       kind: event.kind,
       organizer_email: event.organizer.email,
+      organizer_display_name: event.organizer.display_name,
+      organizer_id: event.organizer.id,
       self_organized: event.organizer.self,
       reminders: event.reminders.as_json || { },
       status: event.status,
       summary: event.summary,
       transparency: event.transparency || "",
-      recurrences: event.recurrence
+      recurrence: event.recurrence,
+      end_time_unspecified: event.end_time_unspecified,
+      visibility: event.visibility,
+      attendees_omitted: event.attendees_omitted,
+      extended_properties: event.extended_properties,
+      hangout_link: event.hangout_link,
+      conference_data: event.conference_data.as_json,
+      gadget: event.gadget,
+      anyone_can_add_self: event.anyone_can_add_self,
+      guests_can_invite_others: event.guests_can_invite_others,
+      guests_can_modify: event.guests_can_modify,
+      guests_can_see_other_guests: event.guests_can_see_other_guests,
+      private_copy: event.private_copy,
+      locked: event.locked,
+      source_url: event.source ? event.source.url : nil ,
+      source_title:event.source ? event.source.title : nil,
+      working_location_properties: event.working_location_properties,
+      attachments: event.attachments
     }
   end
 
@@ -126,6 +148,11 @@ class UpdateUserCalendarsGoogleJob
       organizer: event_attendee.organizer,
       response_status: event_attendee.response_status,
       is_self: event_attendee.self,
+      additional_guests: event_attendee.additional_guests,
+      comment: event_attendee.comment,
+      display_name: event_attendee.display_name,
+      remote_id: event_attendee.id,
+      optional: event_attendee.optional,
     }
   end
 end
