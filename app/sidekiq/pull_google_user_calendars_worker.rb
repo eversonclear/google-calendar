@@ -1,4 +1,4 @@
-class UpdateUserCalendarsGoogleJob
+class PullGoogleUserCalendarsWorker
   include Sidekiq::Job
 
   def perform(current_user_id, calendar_ids = [])
@@ -28,7 +28,7 @@ class UpdateUserCalendarsGoogleJob
     
     calendars.items.each do |calendar_item|
       @calendar_remote_ids << calendar_item.id
-      break if @calendar_ids.present? && !@calendar_ids.include?(calendar_item.id)
+      next if @calendar_ids.present? && !@calendar_ids.include?(calendar_item.id)
 
       @calendar = Calendar.where(remote_id: calendar_item.id).first     
       
