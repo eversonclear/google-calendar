@@ -47,8 +47,8 @@ class CreateEvents < ActiveRecord::Migration[7.0]
       t.boolean :is_reminder_on
       t.text :locations
       t.text :online_meeting
-      t.text :online_meeting_provider
-      t.text :online_meeting_url
+      t.string :online_meeting_provider
+      t.string :online_meeting_url
       t.datetime :original_starts_at
       t.string :original_timezone_starts_at
       t.integer :reminder_minutes_before_start

@@ -1,8 +1,12 @@
 class UpdateUserCalendarsGoogleJob
   include Sidekiq::Job
 
-  def perform(current_user_id)
+  def perform(current_user_id, calendar_ids = [])
     @current_user = User.find(current_user_id)
+    @calendar_ids = calendar_ids
+    @calendar_remote_ids=[]
+    @event_remote_ids=[]
+    @event_attendee_remote_ids=[]
     refresh_token_if_invalid
     set_google_calendar_service
     update_user_calendars
@@ -18,9 +22,14 @@ class UpdateUserCalendarsGoogleJob
   end
 
   def update_user_calendars
+
+    # Calendars
     calendars = @google_calendar_service.list_calendar_lists
     
     calendars.items.each do |calendar_item|
+      @calendar_remote_ids << calendar_item.id
+      break if @calendar_ids.present? && !@calendar_ids.include?(calendar_item.id)
+
       @calendar = Calendar.where(remote_id: calendar_item.id).first     
       
       if @calendar.present?
@@ -29,10 +38,12 @@ class UpdateUserCalendarsGoogleJob
         @calendar = Calendar.create!(calendar_params(calendar_item))
       end
 
+      # Events
       events = @google_calendar_service.list_events(calendar_item.id, 
                                           time_min: Time.now.iso8601)
 
       events.items.each do |event_item|
+        @event_remote_ids << event_item.id
         @event = Event.where(calendar_id: @calendar.id, remote_id: event_item.id).first             
         if @event.present?
           @event.update(event_params(event_item))
@@ -40,8 +51,10 @@ class UpdateUserCalendarsGoogleJob
           @event = @calendar.events.create!(event_params(event_item))
         end
 
+        # Event Attendees
         if event_item.attendees.present?
           event_item.attendees.each do |event_attendee|
+            @event_attendee_remote_ids << calendar_item.id
             @event_attendee = EventAttendee.where(event_id: @event.id, email: event_attendee.email).first  
             
             if @event_attendee.present?
@@ -53,9 +66,17 @@ class UpdateUserCalendarsGoogleJob
         end
       end
     end
+
+    remove_records_nonexistent
   end
 
   private 
+
+  def remove_records_nonexistent
+    Calendar.where.not(remote_id: @calendar_remote_ids).destroy_all
+    Event.where.not(remote_id: @event_remote_ids).destroy_all
+    EventAttendee.where.not(remote_id: @event_attendee_remote_ids).destroy_all
+  end
 
   def set_google_calendar_service
     token = AccessTokenService.new @current_user.google_token

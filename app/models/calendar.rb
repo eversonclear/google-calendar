@@ -4,6 +4,6 @@ class Calendar < ApplicationRecord
   serialize :conference_properties, JSON
   serialize :default_reminders, JSON
 
-  has_many :events
+  has_many :events, dependent: :destroy
   belongs_to :user
 end
