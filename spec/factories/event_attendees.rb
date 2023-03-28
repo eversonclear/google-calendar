@@ -12,6 +12,6 @@ FactoryBot.define do
     additional_guests { 1 }
     display_name { "MyString" }
     type { "" }
-    response_status_time { "2023-03-27 10:38:35" }
+    response_status_time { "2023-03-28 08:32:02" }
   end
 end

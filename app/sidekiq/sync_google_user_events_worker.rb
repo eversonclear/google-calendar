@@ -14,7 +14,6 @@ class SyncGoogleUserEventsWorker
   end
 
   def perform_action
-    puts @body.deep_symbolize_keys
     case @action
     when 'create'
       @google_calendar_service.insert_event(@calendar_remote_id, @body.deep_symbolize_keys) do |result, err|
@@ -25,7 +24,7 @@ class SyncGoogleUserEventsWorker
         end
       end
     when 'update'
-      @google_calendar_service.patch_event(@calendar_remote_id, @event_remote_id, @body.deep_symbolize_keys) do |result, err|
+      @google_calendar_service.update_event(@calendar_remote_id, @event_remote_id, @body.deep_symbolize_keys) do |result, err|
         if err
           puts 'ERRO', err.as_json
         else

@@ -2,11 +2,11 @@ FactoryBot.define do
   factory :event do
     user { nil }
     calendar { nil }
-    remote_created_at { "2023-03-27 10:38:32" }
-    remote_updated_at { "2023-03-27 10:38:32" }
-    starts_at { "2023-03-27 10:38:32" }
+    remote_created_at { "2023-03-28 08:31:41" }
+    remote_updated_at { "2023-03-28 08:31:41" }
+    starts_at { "2023-03-28 08:31:41" }
     starts_at_timezone { "MyString" }
-    finishes_at { "2023-03-27 10:38:32" }
+    finishes_at { "2023-03-28 08:31:41" }
     finishes_at_timezone { "MyString" }
     self_sequence { 1 }
     location { "MyString" }
@@ -48,12 +48,12 @@ FactoryBot.define do
     online_meeting { "MyText" }
     online_meeting_provider { "MyString" }
     online_meeting_url { "MyString" }
-    original_starts_at { "2023-03-27 10:38:32" }
+    original_starts_at { "2023-03-28 08:31:41" }
     original_timezone_starts_at { "MyString" }
     reminder_minutes_before_start { 1 }
     series_master_id { "MyString" }
     response_status_text { "MyString" }
-    response_status_time { "2023-03-27 10:38:32" }
+    response_status_time { "2023-03-28 08:31:41" }
     response_requested { false }
     show_as { "MyString" }
     transaction_id { "MyString" }

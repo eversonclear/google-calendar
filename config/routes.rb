@@ -1,4 +1,7 @@
 Rails.application.routes.draw do
+  resources :event_attendees
+  resources :events
+  resources :calendars
   get '/current_user', to: 'users#show_current_user'
   post '/google_auth', to: 'google_authentication#authenticate'
   devise_for :users, path: '', defaults: {format: :json}, path_names: {
