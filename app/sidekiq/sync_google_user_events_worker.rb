@@ -7,13 +7,19 @@ class SyncGoogleUserEventsWorker
     @calendar_remote_id = calendar_remote_id
     @event_remote_id = event_remote_id
     @action = action
-    @body = body
+    event_attendees = Event.where(remote_id: event_remote_id).first.event_attendees
+    
+    if !body.nil?
+      @body = Event.mount_body_remote_event(body, event_attendees) 
+    end
+    puts '@body: ', @body
     set_google_calendar_service
     
     perform_action
   end
 
   def perform_action
+    @body = 
     case @action
     when 'create'
       @google_calendar_service.insert_event(@calendar_remote_id, @body.deep_symbolize_keys) do |result, err|
