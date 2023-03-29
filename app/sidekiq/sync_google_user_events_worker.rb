@@ -2,16 +2,16 @@ class SyncGoogleUserEventsWorker
   Sidekiq.strict_args!(false)
   include Sidekiq::Job
 
-  def perform(current_user_id, calendar_remote_id, event_remote_id, action, body=nil)
+  def perform(current_user_id, calendar_remote_id, event_remote_id, action)
     @current_user = User.find(current_user_id)
     @calendar_remote_id = calendar_remote_id
     @event_remote_id = event_remote_id
     @action = action
     event_attendees = Event.where(remote_id: event_remote_id).first.event_attendees
     
-    if !body.nil?
-      @body = Event.mount_body_remote_event(body, event_attendees) 
-    end
+    @event = Event.where(remote_id: event_remote_id).first
+    @body = @event.mount_body_remote_event 
+
     puts '@body: ', @body
     set_google_calendar_service
     
@@ -19,7 +19,6 @@ class SyncGoogleUserEventsWorker
   end
 
   def perform_action
-    @body = 
     case @action
     when 'create'
       @google_calendar_service.insert_event(@calendar_remote_id, @body.deep_symbolize_keys) do |result, err|
