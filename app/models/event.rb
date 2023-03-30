@@ -29,23 +29,22 @@ class Event < ApplicationRecord
   ]
 
   def mount_body_remote_event
-    event_google_params = self.slice(*GOOGLE_EVENTS_FIELDS).as_json
+    event_google_params = self.slice(*GOOGLE_EVENTS_FIELDS).as_json.deep_symbolize_keys
     event_attendees_google_params = self.event_attendees.select(*GOOGLE_EVENTS_ATTENDEES_FIELDS).as_json
-
 
     event_google_params[:start] = {
       date_time: event_google_params[:starts_at],
-      time_zone: event_google_params[:starts_at_timezone] || 'UTC'
+      time_zone: event_google_params[:starts_at_timezone]
     }
 
     event_google_params[:end] = {
       date_time: event_google_params[:finishes_at],
-      time_zone: event_google_params[:finishes_at_timezone] || 'UTC'
+      time_zone: event_google_params[:finishes_at_timezone]
     }
  
     event_google_params[:original_start_time] = {
       date_time: event_google_params[:original_starts_at],
-      time_zone: event_google_params[:original_timezone_starts_at] || 'UTC'
+      time_zone: event_google_params[:original_timezone_starts_at]
     }
 
     event_google_params[:source] = {
@@ -53,15 +52,14 @@ class Event < ApplicationRecord
       url: event_google_params[:source_url]
     }
 
-    puts event_attendees_google_params
-    event_google_params[:attendees] = event_attendees_google_params
-    event_google_params[:attendees].each do |event_attendee|
+    event_google_params[:attendees] = event_attendees_google_params.map do |event_attendee|
+      event_attendee = event_attendee.as_json.deep_symbolize_keys
       event_attendee[:self] = event_attendee[:is_self]
       event_attendee.delete(:is_self)
-      event_attendee
+      event_attendee.compact
     end
 
-    keys_deleted_event = [:starts_at, :starts_at_timezone, :original_starts_at, :original_timezone_starts_at, :finishes_at, :finishes_at_timezone] 
+    keys_deleted_event = [:starts_at, :starts_at_timezone, :original_starts_at, :original_timezone_starts_at, :finishes_at, :finishes_at_timezone, :source_title, :source_url, :self_sequence] 
     keys_deleted_event.each { |key| event_google_params.delete(key)}
 
     event_google_params
