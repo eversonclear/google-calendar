@@ -1,6 +1,6 @@
 class Event < ApplicationRecord
   serialize :reminders, JSON
-  serialize :recurrence, Array
+  serialize :recurrence, JSON
   serialize :attachments, JSON
   serialize :conference_data, JSON
   serialize :extended_properties, JSON

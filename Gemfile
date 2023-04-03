@@ -10,6 +10,7 @@ gem "devise"
 
 gem "jwt"
 
+gem 'ice_cube'
 gem 'dotenv-rails'
 
 # Use postgresql as the database for Active Record
