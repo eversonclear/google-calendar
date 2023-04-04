@@ -1,5 +1,6 @@
 class EventsController < ApplicationController
   before_action :set_event, only: %i[ show update destroy ]
+  before_action :treat_recurrence, only: %i[ create update ]
 
   # GET /events
   # GET /events.json
@@ -15,8 +16,7 @@ class EventsController < ApplicationController
   # POST /events
   # POST /events.json
   def create
-    @event = Event.new(event_params)
-    @event.recurrence = TreatRecurrenceService.to_ical_format(@event.recurrence, @event.starts_at, @event.finishes_at)
+    @event = Event.new(event_params.merge!(recurrence: @recurrence_ical_format))
 
     if @event.save
       SyncGoogleUserEventsWorker.perform_async(current_user.id, @event.calendar_id, @event.id, 'create')
@@ -29,7 +29,7 @@ class EventsController < ApplicationController
   # PATCH/PUT /events/1
   # PATCH/PUT /events/1.json
   def update
-    if @event.update(event_params)
+    if @event.update(event_params.merge!(recurrence: @recurrence_ical_format))
       SyncGoogleUserEventsWorker.perform_async(current_user.id, @event.calendar_id, @event.id, 'update')
       render :show, status: :ok, location: @event
     else
@@ -48,6 +48,11 @@ class EventsController < ApplicationController
     # Use callbacks to share common setup or constraints between actions.
     def set_event
       @event = Event.find(params[:id])
+    end
+
+    def treat_recurrence
+      return if event_params[:recurrence].blank?
+      @recurrence_ical_format = TreatRecurrenceService.to_ical_format(event_params[:recurrence].as_json.deep_symbolize_keys)
     end
 
     # Only allow a list of trusted parameters through.
