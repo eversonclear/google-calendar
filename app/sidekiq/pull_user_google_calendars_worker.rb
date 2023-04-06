@@ -42,7 +42,7 @@ class PullUserGoogleCalendarsWorker
       events = @google_calendar_service.list_events(calendar_item.id, 
                                           time_min: Time.now.iso8601)
 
-      events.items.each do |event_item|
+      events.items.each do |event_item|  
         @event_remote_ids << event_item.id
         @event = Event.where(calendar_id: @calendar.id, remote_id: event_item.id).first             
         if @event.present?

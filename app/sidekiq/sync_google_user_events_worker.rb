@@ -1,14 +1,11 @@
 class SyncGoogleUserEventsWorker
   include Sidekiq::Job
 
-  def perform(current_user_id, calendar_remote_id, event_remote_id, action)
-    @calendar_remote_id = calendar_remote_id
-    @event_remote_id = event_remote_id
-
-    @current_user = User.find(current_user_id)
-    @calendar = Calendar.where(remote_id: @calendar_remote_id).first
-    @event = Event.where(remote_id: @event_remote_id).first
+  def perform(event_id, calendar_ids, action)
     @action = action
+    @event = Event.find(event_id)
+    @current_user = User.find(1)
+    @calendars = Calendar.where(calendar_id: calendar_ids)
 
     @body = @event.mount_body_remote_event.deep_symbolize_keys.deep_compact if @event
 
@@ -20,27 +17,35 @@ class SyncGoogleUserEventsWorker
   def perform_action
     case @action
     when 'create'
-      @google_calendar_service.insert_event(@calendar.remote_id, @body) do |result, err|
-        if err
-          puts "Insert event failed: #{err}"
-        else
-          @event.update(remote_id: result.as_json["id"])
+      @calendar_ids.map do |calendar_id| 
+        @body = @event.mount_body_remote_event.deep_symbolize_keys.deep_compact if @event
+
+        @google_calendar_service.insert_event(@calendar.remote_id, @body) do |result, err|
+          if err
+            puts "Insert event failed: #{err}"
+          else
+            ExternalEvent.create!(calendar_id: @event.calendar.id, event_id: @event.id, external_id: result.as_json["id"])
+          end
         end
-      end
+      end  
     when 'update'
-      @google_calendar_service.update_event(@calendar.remote_id, @event.remote_id, @body) do |result, err|
-        if err
-          puts "Update event failed: #{err}"
-        else
-          puts "Update event successfully"
+      @event.external_events.each do |external_event|
+        @google_calendar_service.update_event(external_event.calendar.remote_id, external_events.external_id, @body) do |result, err|
+          if err
+            puts "Update event failed: #{err}"
+          else
+            puts "Update event successfully"
+          end
         end
-      end
+      end 
     when 'delete'
-      @google_calendar_service.delete_event(@calendar_remote_id, @event_remote_id) do |result, err|
-        if err
-          puts "Delete event failed: #{err}"
-        else
-          puts "Delete event successfully"
+      @event.external_events.each do |external_event|
+        @google_calendar_service.delete_event(external_event.calendar.remote_id, external_event.external_id) do |result, err|
+          if err
+            puts "Delete event failed: #{err}"
+          else
+            puts "Delete event successfully"
+          end
         end
       end
     else

@@ -48,7 +48,6 @@ class EventsController < ApplicationController
     @event = Event.new(event_params.merge!(recurrence: @recurrence_ical_format, user_id: current_user.id, calendar_id: calendar.id))
 
     if @event.save
-      SyncGoogleUserEventsWorker.perform_async(current_user.id, @event.calendar.remote_id, @event.remote_id, 'create')
       render :show, status: :created, location: @event
     else
       render json: @event.errors, status: :unprocessable_entity
