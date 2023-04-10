@@ -182,9 +182,9 @@ ActiveRecord::Schema[7.0].define(version: 2023_04_06_181204) do
   end
 
   add_foreign_key "calendars", "users"
-  add_foreign_key "event_attendees", "events"
-  add_foreign_key "events", "calendars"
+  add_foreign_key "event_attendees", "events", on_delete: :cascade
+  add_foreign_key "events", "calendars", on_delete: :cascade
   add_foreign_key "events", "users"
-  add_foreign_key "external_events", "calendars"
-  add_foreign_key "external_events", "events"
+  add_foreign_key "external_events", "calendars", on_delete: :cascade
+  add_foreign_key "external_events", "events", on_delete: :cascade
 end

@@ -42,13 +42,14 @@ class PullUserGoogleCalendarsWorker
       events = @google_calendar_service.list_events(calendar_item.id, 
                                           time_min: Time.now.iso8601)
 
-      events.items.each do |event_item|  
+      events.items.each do |event_item| 
         @event_remote_ids << event_item.id
         @event = Event.where(calendar_id: @calendar.id, remote_id: event_item.id).first             
         if @event.present?
-          @event.update(event_params(event_item))
+          @event.update_columns(**event_params(event_item))
         else
-          @event = @calendar.events.create!(event_params(event_item))
+          row_id = @calendar.events.insert!(event_params(event_item))
+          @event = Event.find(row_id.first["id"])
         end
 
         # Event Attendees
@@ -104,8 +105,8 @@ class PullUserGoogleCalendarsWorker
 
   def event_params(event)
     {
-      calendar: @calendar,
-      user: @current_user,
+      calendar_id: @calendar.id,
+      user_id: @current_user.id,
       self_sequence: event.sequence,
       location: event.location || '',
       description: event.description || '',
@@ -156,7 +157,7 @@ class PullUserGoogleCalendarsWorker
 
   def event_attendee_params(event_attendee)
     {
-      event: @event,
+      event_id: @event.id,
       email: event_attendee.email,
       organizer: event_attendee.organizer,
       response_status: event_attendee.response_status,

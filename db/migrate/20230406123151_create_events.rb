@@ -2,7 +2,7 @@ class CreateEvents < ActiveRecord::Migration[7.0]
   def change
     create_table :events do |t|
       t.references :user, null: false, foreign_key: true
-      t.references :calendar, null: false, foreign_key: true
+      t.references :calendar, null: false, index: true, foreign_key: { on_delete: :cascade }
       t.datetime :remote_created_at
       t.datetime :remote_updated_at
       t.datetime :starts_at

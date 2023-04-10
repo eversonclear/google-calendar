@@ -9,14 +9,14 @@ class ApplicationController < ActionController::API
   before_action :authenticate_user
 
   private
-def refresh_token_if_invalid
-  @google_service = GoogleService.new
+  def refresh_token_if_invalid
+    @google_service = GoogleService.new
 
-  if !@google_service.access_token_is_valid?(current_user.google_expire_token)
-    data_token = @google_service.refresh_token(current_user.google_refresh_token)
-    @current_user.update(google_token: data_token['access_token'], google_expire_token: Time.now + data_token['expires_in'])
+    if !@google_service.access_token_is_valid?(current_user.google_expire_token)
+      data_token = @google_service.refresh_token(current_user.google_refresh_token)
+      @current_user.update(google_token: data_token['access_token'], google_expire_token: Time.now + data_token['expires_in'])
+    end
   end
-end
 
   def configure_permitted_parameters
     devise_parameter_sanitizer.permit(:sign_up, keys: [:first_name, :last_name])

@@ -10,12 +10,12 @@ class Event < ApplicationRecord
   serialize :categories, JSON
   serialize :gadget, JSON
 
+  before_destroy :sync_delete
   after_commit :sync_create, on: :create
   after_commit :sync_update, on: :update
-  before_destroy :sync_delete
 
-  has_many :event_attendees, dependent: :destroy
-  has_many :external_events, dependent: :destroy
+  has_many :event_attendees
+  has_many :external_events
 
   accepts_nested_attributes_for :event_attendees
   belongs_to :user
@@ -84,6 +84,6 @@ class Event < ApplicationRecord
 
   def sync_delete
     calendar_remote_ids = Calendar.where(access_role: ['writer', 'owner']).ids
-    SyncGoogleUserEventsWorker.perform_async(self.id, calendar_remote_ids, 'delete')
+    SyncGoogleUserEventsWorker.perform_sync(self.id, calendar_remote_ids, 'delete')
   end
 end
