@@ -31,6 +31,7 @@ class CreateCalendars < ActiveRecord::Migration[7.0]
       t.boolean :is_tallying_responses
       t.boolean :is_default_calendar
       t.boolean :is_removable
+      t.boolean :should_sync, :default => false
       t.string :owner_name
       t.string :owner_email
       t.string :status

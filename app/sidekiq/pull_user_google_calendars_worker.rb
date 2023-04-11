@@ -50,6 +50,7 @@ class PullUserGoogleCalendarsWorker
         else
           row_id = @calendar.events.insert!(event_params(event_item))
           @event = Event.find(row_id.first["id"])
+          @event.external_events.create(calendar_id: @calendar.id, external_id: @event.remote_id)
         end
 
         # Event Attendees

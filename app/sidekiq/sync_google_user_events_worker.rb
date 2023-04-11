@@ -1,13 +1,13 @@
 class SyncGoogleUserEventsWorker
   include Sidekiq::Job
 
-  def perform(event_id, calendar_ids, action)
-    @calendars = Calendar.where(id: calendar_ids)
+  def perform(event_id, action)
+    calendar_remote_ids = Calendar.where(access_role: ['writer', 'owner'], should_sync: true).ids
+    @calendars = Calendar.where(id: calendar_remote_ids)
     return if @calendars.empty?
 
     @action = action
     @event = Event.find(event_id)
-    
     @current_user = User.find(@calendars[0].as_json['user_id'])
     @body = @event.mount_body_remote_event.deep_symbolize_keys.deep_compact if @event
 

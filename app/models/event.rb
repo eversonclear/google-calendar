@@ -73,17 +73,14 @@ class Event < ApplicationRecord
   private
    
   def sync_create
-    calendar_remote_ids = Calendar.where(access_role: ['writer', 'owner']).ids
-    SyncGoogleUserEventsWorker.perform_async(self.id, calendar_remote_ids, 'create')
+    SyncGoogleUserEventsWorker.perform_async(self.id, 'create')
   end
 
   def sync_update
-    calendar_remote_ids = Calendar.where(access_role: ['writer', 'owner']).ids
-    SyncGoogleUserEventsWorker.perform_async(self.id, calendar_remote_ids, 'update')
+    SyncGoogleUserEventsWorker.perform_async(self.id, 'update')
   end
 
   def sync_delete
-    calendar_remote_ids = Calendar.where(access_role: ['writer', 'owner']).ids
-    SyncGoogleUserEventsWorker.perform_sync(self.id, calendar_remote_ids, 'delete')
+    SyncGoogleUserEventsWorker.perform_sync(self.id, 'delete')
   end
 end
