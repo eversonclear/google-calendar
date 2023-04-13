@@ -7,14 +7,17 @@ import {
   GoogleSignin,
 } from "@react-native-google-signin/google-signin";
 
+
 function configureGoogle() {
   GoogleSignin.configure({
+    scopes: [
+      "https://www.googleapis.com/auth/calendar",
+      "https://www.googleapis.com/auth/calendar.events"
+    ],
     androidClientId: GOOGLE_ANDROID_CLIENT_ID,
     iosClientId: GOOGLE_IOS_CLIENT_ID,
     webClientId: GOOGLE_WEB_CLIENT_ID,
     offlineAccess: true,
-    scope: [
-    ],
     forceCodeForRefreshToken: true,
   });
 }

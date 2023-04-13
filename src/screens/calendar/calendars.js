@@ -1,20 +1,36 @@
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View, Modal, Alert } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
 import { useAuth } from '../../context/auth';
 import api_client from '../../config/api_client';
 import { FlatList } from 'react-native-gesture-handler';
+import FeatherIcon from 'react-native-vector-icons/Feather'
 import moment from 'moment';
-import { ActivityIndicator } from 'react-native';
+import { Modalize } from 'react-native-modalize';
+
+import { ActivityIndicator, Switch } from 'react-native';
 
 const Calendars = () => {
   const { user } = useAuth();
   const [calendars, setCalendars] = useState([])
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCalendar, setSelectedCalendar] = useState(null);
+
+  const [syncCalendarSelected, setSyncCalendarSelected] = useState({})
+
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
+
+  const modalizeSyncRef = useRef(null);
+
+  const onSyncOpen = (calendar_remote_id) => {
+    api_client.get(`/calendars?remote_id=${calendar_remote_id}`)
+      .then(async ({ data }) => {
+        setSyncCalendarSelected(data[0])
+        modalizeSyncRef.current?.open();
+      }).catch(e => console.log(e))
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -29,11 +45,23 @@ const Calendars = () => {
   }, [selectedCalendar])
 
   const getCalendars = async () => {
-    await api_client.get(`/calendars`)
-      .then(async ({ data }) => {
+    await api_client.get(`/calendars_from_google`)
+      .then(({ data }) => {
         setCalendars(data)
       }).catch(e => console.log(e))
     setLoading(false)
+  }
+
+  const updateSyncCalendar = async () => {
+    setSyncCalendarSelected({ ...syncCalendarSelected, should_sync: !syncCalendarSelected.should_sync })
+    await api_client.patch(`/calendars/${syncCalendarSelected.id}`, {calendar: {should_sync: !syncCalendarSelected.should_sync}})
+    .then(async _ => {
+      console.log('updated')
+    })
+    .catch(() => {
+      Alert.alert('Error', 'Error to the update should sync calendar')
+      setSyncCalendarSelected({ ...syncCalendarSelected, should_sync: !syncCalendarSelected.should_sync })
+    })
   }
 
   const getEvents = async () => {
@@ -69,13 +97,15 @@ const Calendars = () => {
   const importCalendarAndEvents = () => {
     setLoading(true)
     api_client.post('/import_calendars_and_events', { calendar_ids: [selectedCalendar.id] })
-      .then(res => {
+      .then(async _ => {
+        await getCalendars()
         setModalVisible(false)
         setSelectedCalendar(false)
-        Alert.alert("Calendar and events imported successfully!")
+        
+        Alert.alert("Success", "Calendar and events imported successfully!")
       })
       .catch(err => console.error(err))
-    setLoading(false)
+      .finally(() => setLoading(false))
   }
 
   const closeModal = () => {
@@ -150,15 +180,21 @@ const Calendars = () => {
     )
   }
 
-  const Item = ({ item, onPress }) => (
-    <TouchableOpacity onPress={onPress} style={styles.item}>
-      <Text style={styles.title}>{user.email === item.summary ? `Personal Calendar (${item.summary})` : item.summary}</Text>
-      <Text style={styles.description}>{item.description}</Text>
-    </TouchableOpacity>
-  );
+  const Item = ({ item, onPress }) => {
+    return (
+      <TouchableOpacity onPress={onPress} style={styles.item}>
+        <Text style={styles.title}>{user.email === item.summary ? `Personal Calendar (${item.summary})` : item.summary}</Text>
+        <Text style={styles.description}>{item.description}</Text>
+        { item.imported && 
+          <TouchableOpacity style={styles.buttonSettings} onPress={() => onSyncOpen(item.id)}>
+            <FeatherIcon name='refresh-cw' size={20} color='white'/> 
+          </TouchableOpacity>
+        }
+      </TouchableOpacity>
+    )
+  };
 
   const renderItem = ({ item }) => {
-
     return (
       <Item
         item={item}
@@ -169,23 +205,62 @@ const Calendars = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <Modalize ref={modalizeSyncRef} adjustToContentHeight>
+        <SafeAreaView style={{padding: 40, height: 200}}>
+          <View style={{justifyContent: 'space-between', flex: 1}}>
+            <Text style={{textAlign: 'center', fontWeight: 'bold', fontSize: 20, color: 'red'}}>{syncCalendarSelected.summary}</Text>
+
+            <View style={{flexDirection: 'row', justifyContent: 'space-around'}}>
+              <Text style={{textAlign: 'center', fontWeight: 'bold', fontSize: 20}}>Sync Google:</Text>
+              <View style={{flexDirection: 'row', alignItems: 'center', gap: 5}}>
+                <Switch                
+                  trackColor={{false: '#767577', true: '#81b0ff'}}
+                  thumbColor={syncCalendarSelected.should_sync ? '#f5dd4b' : '#f4f3f4'}
+                  ios_backgroundColor="#3e3e3e"
+                  onValueChange={_ => updateSyncCalendar()}
+                  value={syncCalendarSelected.should_sync}
+                />
+                <Text>{syncCalendarSelected.should_sync ? 'On': 'Off'}</Text>
+              </View>   
+            </View>
+          </View>
+        </SafeAreaView>
+      </Modalize>
+
       {loading ?
         <View style={styles.loading}>
           <ActivityIndicator />
         </View>
         :
         <>
-          {calendars && calendars.length > 0 ?
-            <FlatList
-              data={calendars}
-              renderItem={renderItem}
-              keyExtractor={item => item.id}
-            />
-            :
-            <View style={styles.noCalendarsMessage}>
+          {
+            calendars && calendars.filter(c => c.imported).length > 0 &&
+            <View>
+              <Text style={{textAlign: 'center', fontSize: 20, fontWeight: 'bold', color: '#81b0ff'}}>Imported</Text>
+              <FlatList
+                data={calendars.filter(c => c.imported)}
+                renderItem={renderItem}
+                keyExtractor={item => item.id}
+              /> 
+            </View>
+          }
+
+          {
+            calendars && calendars.filter(c => !c.imported).length > 0 &&
+            <View style={{marginTop: 20}}>
+              <Text style={{textAlign: 'center', fontSize: 20, fontWeight: 'bold', color: 'red'}}>Not Imported Yet</Text>
+              <FlatList
+                data={calendars.filter(c => !c.imported)}
+                renderItem={renderItem}
+                keyExtractor={item => item.id}
+              /> 
+            </View>
+          }
+
+          {
+            !calendars[0] && <View style={styles.noCalendarsMessage}>
               <Text>No calendars to show.</Text>
             </View>
-
           }
           {modalVisible && selectedCalendar && <ModalComponent item={selectedCalendar} setModalVisible={setModalVisible} />}
         </>
@@ -200,7 +275,7 @@ export default Calendars
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginTop: 10,
+    marginTop: 10
   },
   item: {
     padding: 10,
@@ -325,6 +400,21 @@ const styles = StyleSheet.create({
     flex: 1, 
     alignItems: 'center', 
     justifyContent: 'center'
+  },
+  buttonSettings:{
+    position: 'absolute', 
+    right: 15, 
+    bottom: 15, 
+    padding: 5, 
+    backgroundColor: '#81b0ff', 
+    borderRadius: 100, 
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.22,
+    shadowRadius: 2,
+    elevation: 3
   }
-
 });
